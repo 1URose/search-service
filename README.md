@@ -128,7 +128,7 @@ KAFKA_PRODUCER_WORKERS=
 Поиск товаров
 **Request** (`application/json`):
 
-```json
+```go
 {
   "query": "laptop",                          // строка поиска
   "categories": ["electronics","computers"],  // фильтр по категориям
@@ -145,10 +145,10 @@ KAFKA_PRODUCER_WORKERS=
 
 **Response** (`200 OK`, `application/json`):
 
-```json
+```go
 {
   "Products":[
-    {"id":"1","name":"Dell XPS 13","description":"...","price":999,"stock":42,"category":"electronics","brand":"Dell"},
+    {"Id":"1","Name":"Dell XPS 13","Description":"...","Price":999,"Stock":42,"Category":"electronics","Brand":"Dell"},
     // ...
   ],
   "Total": 42,
