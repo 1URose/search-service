@@ -18,11 +18,11 @@ type Consumer struct {
 func NewConsumer(consumerConnection *connection.Consumer) *Consumer {
 	cfg := consumerConnection.Config
 
-	log.Printf("[kafka:product] initializing consumer: topic=%s, groupID=%s", cfg.UserOrderTopic, cfg.GroupID)
+	log.Printf("[kafka:product] initializing consumer: topic=%s, groupID=%s", cfg.SearchTopic, cfg.GroupID)
 
 	reader := kafka.NewReader(kafka.ReaderConfig{
 		Brokers:        consumerConnection.Brokers,
-		Topic:          cfg.UserOrderTopic,
+		Topic:          cfg.SearchTopic,
 		GroupID:        cfg.GroupID,
 		Dialer:         consumerConnection.Connection,
 		MinBytes:       cfg.MinBytes,

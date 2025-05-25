@@ -18,7 +18,7 @@ func LoadKafkaConfig() KafkaConfig {
 		},
 		Consumer: KafkaConsumerConfig{
 			GroupID:        getEnv("KAFKA_CONSUMER_GROUP_ID"),
-			UserOrderTopic: getEnv("KAFKA_CONSUMER_USER_ORDER_TOPIC"),
+			SearchTopic:    getEnv("KAFKA_CONSUMER_SEARCH_TOPIC"),
 			StartOffset:    parseInt64("KAFKA_CONSUMER_START_OFFSET"),
 			CommitInterval: parseDuration("KAFKA_CONSUMER_COMMIT_INTERVAL"),
 			UseTLS:         parseBool("KAFKA_USE_TLS"),

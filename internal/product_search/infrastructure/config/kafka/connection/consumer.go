@@ -24,7 +24,7 @@ func NewConsumerConnection(kafkaCfg config.KafkaConfig) *Consumer {
 
 	log.Printf("[kafka:consumer] groupID=%s topic=%s startOffset=%d useTLS=%t",
 		kafkaCfg.Consumer.GroupID,
-		kafkaCfg.Consumer.UserOrderTopic,
+		kafkaCfg.Consumer.SearchTopic,
 		kafkaCfg.Consumer.StartOffset,
 		kafkaCfg.Consumer.UseTLS,
 	)

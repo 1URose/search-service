@@ -11,9 +11,9 @@ type KafkaCommonConfig struct {
 }
 
 type KafkaConsumerConfig struct {
-	GroupID        string
-	UserOrderTopic string
-	StartOffset    int64
+	GroupID     string
+	SearchTopic string
+	StartOffset int64
 	CommitInterval time.Duration
 	UseTLS         bool
 	MinBytes       int
