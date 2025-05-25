@@ -108,13 +108,17 @@ docker-up: ## Запустить сервисы Docker Compose с указани
 .PHONY: docker-down
 docker-down: ## Остановить сервисы Docker Compose
 	@echo "---- docker-down: Начало ----"
-	@$(DOCKER_PATH) down
+	@docker-compose \
+    	  --env-file .env \
+    	  -f docker/docker-compose.yml down
 	@echo "---- docker-down: Завершено ----"
 
 .PHONY: docker-down-v
 docker-down-v: ## Остановить и удалить сервисы Docker Compose вместе с volume
 	@echo "---- docker-down-v: Начало ----"
-	@$(DOCKER_PATH) down -v
+	@docker-compose \
+    	  --env-file .env \
+    	  -f docker/docker-compose.yml down -v
 	@echo "---- docker-down-v: Завершено ----"
 
 # ----------------------------------------
