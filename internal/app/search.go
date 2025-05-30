@@ -15,9 +15,10 @@ import (
 	swaggerfiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"gitlab.mai.ru/4-bogatyra/backend/search/docs"
+	CommonApp "gitlab.mai.ru/4-bogatyra/backend/search/internal/common/app"
 	"gitlab.mai.ru/4-bogatyra/backend/search/internal/common/db"
 	"gitlab.mai.ru/4-bogatyra/backend/search/internal/common/settings"
-	"gitlab.mai.ru/4-bogatyra/backend/search/internal/product_search/app"
+	productSearchApp "gitlab.mai.ru/4-bogatyra/backend/search/internal/product_search/app"
 	"time"
 
 	"log"
@@ -56,7 +57,8 @@ func Run(ctx context.Context) error {
 	}
 	log.Println("Database connections established")
 
-	app.Run(ctx, engine, connections.ESClient)
+	CommonApp.Run(engine)
+	productSearchApp.Run(ctx, engine, connections.ESClient)
 
 	addr := ":8080"
 	swaggerURL := fmt.Sprintf("http://localhost%s/swagger/index.html", addr)

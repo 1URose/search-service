@@ -1,17 +1,29 @@
 {
-    "schemes": [
-        "http"
-    ],
     "swagger": "2.0",
     "info": {
-        "description": "API для поиска и управления каталогом продуктов",
-        "title": "Product Search API",
-        "contact": {},
-        "version": "1.0"
+        "contact": {}
     },
-    "host": "localhost:8080",
-    "basePath": "/",
     "paths": {
+        "/metrics": {
+            "get": {
+                "description": "Экспортирует все зарегистрированные в приложении метрики в формате Prometheus.",
+                "produces": [
+                    "text/plain"
+                ],
+                "tags": [
+                    "metrics"
+                ],
+                "summary": "Prometheus metrics",
+                "responses": {
+                    "200": {
+                        "description": "metrics in Prometheus format",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/product/bulk": {
             "post": {
                 "description": "Индексация списка продуктов",

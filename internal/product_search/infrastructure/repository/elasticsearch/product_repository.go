@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"gitlab.mai.ru/4-bogatyra/backend/search/internal/common/metrics"
 	entityF "gitlab.mai.ru/4-bogatyra/backend/search/internal/product_search/domain/facet/entity"
 	entityFB "gitlab.mai.ru/4-bogatyra/backend/search/internal/product_search/domain/facet_bucket/entity"
 	entitySP "gitlab.mai.ru/4-bogatyra/backend/search/internal/product_search/domain/search_params/entity"
@@ -24,6 +25,16 @@ type ProductRepository struct {
 	index string
 }
 
+func recordES(op string, start time.Time, err error) {
+	duration := time.Since(start)
+	status := "success"
+	if err != nil {
+		status = "error"
+	}
+	metrics.ESRequestsTotal.WithLabelValues(op, status).Inc()
+	metrics.ESRequestDuration.WithLabelValues(op, status).Observe(duration.Seconds())
+}
+
 func NewProductRepository(client *elasticsearch.Client, index string) *ProductRepository {
 	log.Printf("[ProductRepository] Initialized with index=%q", index)
 	return &ProductRepository{
@@ -33,6 +44,13 @@ func NewProductRepository(client *elasticsearch.Client, index string) *ProductRe
 }
 
 func (r *ProductRepository) Save(p *entityP.Product) error {
+	start := time.Now()
+	err := r.save(p)
+	recordES("Save", start, err)
+	return err
+}
+
+func (r *ProductRepository) save(p *entityP.Product) error {
 	log.Printf("[ProductRepository] Saving product ID=%s", p.ID)
 
 	body, err := json.Marshal(p)
@@ -64,6 +82,13 @@ func (r *ProductRepository) Save(p *entityP.Product) error {
 }
 
 func (r *ProductRepository) BulkSave(products []*entityP.Product) error {
+	start := time.Now()
+	err := r.bulkSave(products)
+	recordES("BulkSave", start, err)
+	return err
+}
+
+func (r *ProductRepository) bulkSave(products []*entityP.Product) error {
 	log.Printf("[ProductRepository] Bulk saving %d products", len(products))
 
 	var buf bytes.Buffer
@@ -98,6 +123,13 @@ func (r *ProductRepository) BulkSave(products []*entityP.Product) error {
 }
 
 func (r *ProductRepository) Delete(id string) error {
+	start := time.Now()
+	err := r.delete(id)
+	recordES("Delete", start, err)
+	return err
+}
+
+func (r *ProductRepository) delete(id string) error {
 	log.Printf("[ProductRepository] Deleting product ID=%s", id)
 
 	res, err := r.es.Connection.Delete(
@@ -121,6 +153,13 @@ func (r *ProductRepository) Delete(id string) error {
 }
 
 func (r *ProductRepository) Search(params *entitySP.SearchParams) (*entitySR.SearchResult, error) {
+	start := time.Now()
+	result, err := r.search(params)
+	recordES("Search", start, err)
+	return result, err
+}
+
+func (r *ProductRepository) search(params *entitySP.SearchParams) (*entitySR.SearchResult, error) {
 	log.Printf("[ProductRepository] Starting product search with params: %+v", params)
 
 	query := make(map[string]interface{})
@@ -298,6 +337,34 @@ func (r *ProductRepository) Search(params *entitySP.SearchParams) (*entitySR.Sea
 }
 
 func (r *ProductRepository) Health() (*entityCH.ClusterHealth, error) {
+	start := time.Now()
+
+	// Сначала вызываем приватную реализацию
+	health, err := r.health()
+
+	// Если запрос прошёл успешно, обновляем gauge’ы
+	if err == nil {
+		var val float64
+		switch health.Status {
+		case "green":
+			val = 2
+		case "yellow":
+			val = 1
+		default:
+			val = 0
+		}
+		metrics.ESClusterStatus.Set(val)
+		metrics.ESActiveShards.Set(float64(health.ActiveShards))
+		metrics.ESRelocatingShards.Set(float64(health.RelocatingShards))
+		metrics.ESUnassignedShards.Set(float64(health.UnassignedShards))
+	}
+
+	// Считаем общее время и результат операции
+	recordES("Health", start, err)
+	return health, err
+}
+
+func (r *ProductRepository) health() (*entityCH.ClusterHealth, error) {
 	log.Println("[ProductRepository] Checking cluster health")
 
 	res, err := r.es.Connection.Cluster.Health(
@@ -338,6 +405,13 @@ func (r *ProductRepository) Health() (*entityCH.ClusterHealth, error) {
 }
 
 func (r *ProductRepository) IndicesExistsAndCreateIfMissing() error {
+	start := time.Now()
+	err := r.indicesExistsAndCreateIfMissing()
+	recordES("CreateIndex", start, err)
+	return err
+}
+
+func (r *ProductRepository) indicesExistsAndCreateIfMissing() error {
 	ctx := context.Background()
 
 	res, err := r.es.Connection.Indices.Exists([]string{r.index})

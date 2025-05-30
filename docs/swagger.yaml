@@ -1,4 +1,3 @@
-basePath: /
 definitions:
   product_dto.ProductRequest:
     properties:
@@ -46,13 +45,23 @@ definitions:
       sortOrder:
         type: string
     type: object
-host: localhost:8080
 info:
   contact: {}
-  description: API для поиска и управления каталогом продуктов
-  title: Product Search API
-  version: "1.0"
 paths:
+  /metrics:
+    get:
+      description: Экспортирует все зарегистрированные в приложении метрики в формате
+        Prometheus.
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: metrics in Prometheus format
+          schema:
+            type: string
+      summary: Prometheus metrics
+      tags:
+      - metrics
   /product/bulk:
     post:
       consumes:
@@ -203,6 +212,4 @@ paths:
       summary: Поиск товаров
       tags:
       - product
-schemes:
-- http
 swagger: "2.0"

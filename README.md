@@ -7,7 +7,7 @@
 * **Сортировки** по релевантности, цене и популярности
 * **Пагинации** и **подсветки** (highlighting) найденных фрагментов
 * **Фасетной навигации** (aggregation buckets)
-* **Metrics & Monitoring**: проверка статуса кластера и основных метрик
+* 📈 **Metrics & Monitoring**: Prometheus-метрики, Grafana-дашборды, статус кластера ES
 
 ---
 
@@ -17,7 +17,8 @@
 * 🔍 **Search API** с JSON-запросом (multi\_match, фильтры, sort, from/size)
 * ✨ **Highlighting** ключевых слов в полях `name` и `description`
 * 📊 **Facet Aggregations** по `category` и `brand`
-* 📈 **Cluster Health** (`GET /product/health`)
+* ❤️‍🔥 **Cluster Health** (`GET /product/health`) + ES-метрики
+* 📈 **Prometheus Endpoint** (`GET /metrics`) для сбора всех метрик
 * 📦 **Docker Compose** для Elasticsearch (кластер из 3-х нод) и Kibana
 * 🧩 **Clean Architecture** (domain, use\_cases, transport, infrastructure)
 
@@ -28,7 +29,8 @@
 * **Go**
 * **gin-gonic/gin** (REST API)
 * **github.com/elastic/go-elasticsearch/v8**
-* **github.com/segmentio/kafka-go** (Kafka consumer)
+* **github.com/segmentio/kafka-go**
+* * **github.com/prometheus/client_golang** + **promhttp**
 * **Docker & Docker Compose**
 * **Clean Architecture**
 
@@ -55,16 +57,6 @@
 
 * `make clean`
   Удалить артефакты сборки.
-
----
-
-## 🐳 Docker & Docker Compose
-
-В корне находится `docker-compose.yml`, который поднимает:
-
-* **setup**: генерирует сертификаты (CA и node-certs)
-* **es01/es02/es03**: трёхнодовый кластер Elasticsearch (без HTTP-SSL, `xpack.security.enabled=false`)
-* **kibana**: для просмотра индексов
 
 ---
 
@@ -109,7 +101,175 @@ KAFKA_CONSUMER_MAX_BYTES=
 KAFKA_CONSUMER_WORKERS=
 KAFKA_PRODUCER_WORKERS=
 
+PROMETHEUS_PORT=
+GRAFANA_PORT=
+GF_ADMIN_USER=
+GF_ADMIN_PASSWORD=
+
 ```
+---
+````markdown
+# 🛍️ Product Search Microservice
+
+Микросервис **product-search** обеспечивает индексацию и полнотекстовый поиск товаров с поддержкой:
+
+* 🔄 **Массовой** и **инкрементальной** индексации через Kafka-сообщения  
+* 🔍 **Фильтрации** по категориям, бренду и ценовым диапазонам  
+* 🔀 **Сортировки** по релевантности, цене и популярности  
+* 📑 **Пагинации** и **подсветки** (highlighting) найденных фрагментов  
+* 📊 **Фасетной навигации** (aggregation buckets)  
+* 📈 **Metrics & Monitoring**: Prometheus-метрики, Grafana-дашборды, статус кластера ES  
+
+---
+
+## 🚀 Возможности
+
+* 🔄 **Bulk / Incremental Indexing** — через Kafka consumer  
+* 🔍 **Search API** с JSON-запросом (multi_match, фильтры, sort, from/size)  
+* ✨ **Highlighting** ключевых слов в полях `name` и `description`  
+* 📊 **Facet Aggregations** по `category` и `brand`  
+* ❤️‍🔥 **Cluster Health** (`GET /product/health`) + ES-метрики  
+* 📈 **Prometheus Endpoint** (`GET /metrics`) для сбора всех метрик  
+* 📦 **Docker Compose** для Elasticsearch (3-node) и Kibana  
+* 🧩 **Clean Architecture** (domain, use_cases, transport, infrastructure)  
+
+---
+
+## ⚙️ Технологии
+
+* **Go**  
+* **gin-ginic/gin** (REST API + middleware для метрик)  
+* **github.com/elastic/go-elasticsearch/v8**  
+* **github.com/segmentio/kafka-go** (Kafka consumer)  
+* **github.com/prometheus/client_golang** + **promhttp**  
+* **Docker & Docker Compose**  
+* **Clean Architecture**  
+
+---
+
+## 🛠 Makefile
+
+В корне проекта есть `Makefile`:
+
+| Цель              | Описание                                             |
+|-------------------|------------------------------------------------------|
+| `make help`       | Показать список целей                                |
+| `make deps`       | Установить Go-модули и инструменты (swag, protoc)    |
+| `make build`      | Скомпилировать бинарник в `bin/product-search`       |
+| `make run`        | Сборка и запуск сервиса локально                     |
+| `make docker-up`  | Поднять ES-кластер и Kibana через `docker-compose`   |
+| `make docker-down`| Остановить контейнеры                                |
+| `make clean`      | Очистить артефакты сборки                            |
+
+---
+
+## 🐳 Docker & Docker Compose
+
+Файл `docker-compose.yml` поднимает:
+
+* **setup**: генерирует CA и node-сертификаты  
+* **es01/es02/es03**: трёхнодовый ES-кластер (без HTTP-SSL)  
+* **kibana**: UI для просмотра индексов  
+
+---
+
+## 🧪 Переменные окружения
+
+Создайте `.env` с:
+
+```env
+# Elasticsearch
+ES_PORT=
+ELASTIC_USER=
+ELASTIC_PASSWORD=
+
+# ES cluster settings
+STACK_VERSION=
+CLUSTER_NAME=
+LICENSE=
+MEM_LIMIT=
+
+# HTTP-пул
+ES_MAX_IDLE_CONNS=
+ES_MAX_IDLE_CONNS_PER_HOST=
+ES_IDLE_CONN_TIMEOUT=
+
+# Kafka
+KAFKA_USERNAME=
+KAFKA_PASSWORD=
+KAFKA_BOOTSTRAP_SERVERS=
+KAFKA_USE_TLS=
+KAFKA_CONSUMER_GROUP_ID=
+KAFKA_CONSUMER_START_OFFSET=
+KAFKA_CONSUMER_COMMIT_INTERVAL=
+KAFKA_CONSUMER_MIN_BYTES=
+KAFKA_CONSUMER_MAX_BYTES=
+KAFKA_CONSUMER_WORKERS=
+KAFKA_PRODUCER_WORKERS=
+````
+
+---
+
+## 📡 Monitoring
+
+### 1. `/metrics`
+
+Экспортирует все Prometheus-метрики вашего приложения:
+
+* HTTP: общее число запросов и гистограммы времени ответа
+* ES: число и длительность операций (`Save`, `Search`, `BulkSave`, `Delete`, `Health`)
+* ES: статус кластера (`0=red,1=yellow,2=green`), количество активных/relocating/unassigned шаров
+
+### 2. Промetheus
+
+В `prometheus.yml` добавьте:
+
+```yaml
+scrape_configs:
+  - job_name: 'product_search'
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['<HOST>:<PORT>']
+```
+
+Проверьте на [http://localhost:9090](http://localhost:9090) → **Status → Targets**, что `product_search` UP.
+
+### 3. Grafana
+
+1. Откройте Grafana ([http://localhost:3000](http://localhost:3000)), добавьте **Prometheus** как Data Source (`http://localhost:9090`).
+2. Создайте Dashboard или **Import** готовый JSON:
+
+    * **QPS per endpoint**:
+
+      ```promql
+      rate(product_search_http_requests_total[1m])
+      ```
+    * **HTTP Error Rate**:
+
+      ```promql
+      sum(rate(product_search_http_requests_total{status!="200"}[5m])) 
+      / sum(rate(product_search_http_requests_total[5m]))
+      ```
+    * **P95 HTTP Latency**:
+
+      ```promql
+      histogram_quantile(0.95, sum by(le, handler) (
+        rate(product_search_http_request_duration_seconds_bucket[5m])
+      ))
+      ```
+    * **ES Cluster Status**:
+
+      ```promql
+      product_search_elastic_cluster_status
+      ```
+    * **Shards**:
+
+      ```promql
+      product_search_elastic_active_shards
+      product_search_elastic_relocating_shards
+      product_search_elastic_unassigned_shards
+      ```
+3. Настройте **time range** (Last 1h) и **Auto-refresh** (15s).
 
 ---
 
@@ -168,6 +328,7 @@ KAFKA_PRODUCER_WORKERS=
   "timed_out":false
 }
 ```
+
 
 ---
 
